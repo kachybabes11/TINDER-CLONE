@@ -4,7 +4,10 @@ import cookieParser from "cookie-parser";
 import "dotenv/config";
 
 import { connectDB } from "./config/db.js";
-import authRoutes from "./routes/auth.routes.js";
+import authRoutes from "./routes/auth.route.js";
+import matchRoutes from "./routes/match.route.js";
+import messageRoutes from "./routes/message.route.js";
+import userRoutes from "./routes/user.route.js";
 import { getJwtSecret } from "./lib/auth.js";
 
 const PORT = process.env.PORT || 5000;
@@ -13,6 +16,9 @@ const app = express();
 app.use(cookieParser());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.use("/api/matches", matchRoutes);
+app.use("/api/messages", messageRoutes);
+app.use("/api/users", userRoutes);
 
 app.use((error, _req, res, next) => {
   console.error("Unhandled request error:", error);
