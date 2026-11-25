@@ -1,7 +1,11 @@
+import dns from "node:dns"
 import { pathToFileURL } from "node:url";
 import express from "express";
 import cookieParser from "cookie-parser";
+import cors from "cors"
 import "dotenv/config";
+
+dns.setServers(["1.1.1.1", "8.8.8.8"])
 
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/auth.route.js";
@@ -14,13 +18,26 @@ const PORT = process.env.PORT || 5000;
 const app = express();
 
 app.use(cookieParser());
+app.use(cors({
+  origin:"http://localhost:5173",
+  credentials: true
+}))
+
+app.put("/api/users/update", express.json({ limit: "10mb" }));
 app.use(express.json());
+
 app.use("/api/auth", authRoutes);
 app.use("/api/matches", matchRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/users", userRoutes);
 
 app.use((error, _req, res, next) => {
+  if (error?.type === "entity.too.large") {
+    return res.status(413).json({
+      message: "Request payload is too large. Choose a smaller profile image.",
+    });
+  }
+
   console.error("Unhandled request error:", error);
   if (res.headersSent) {
     return next(error);
