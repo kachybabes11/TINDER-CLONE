@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Camera, Pencil, Save, User, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../store/useAuthStore";
@@ -37,10 +37,6 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(() => getProfileForm(authUser));
 
-  useEffect(() => {
-    setFormData(getProfileForm(authUser));
-  }, [authUser]);
-
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((currentData) => ({ ...currentData, [name]: value }));
@@ -73,12 +69,13 @@ const ProfilePage = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const updated = await updateProfile({
+    const updatedUser = await updateProfile({
       ...formData,
       age: Number(formData.age),
     });
 
-    if (updated) {
+    if (updatedUser) {
+      setFormData(getProfileForm(updatedUser));
       setIsEditing(false);
     }
   };

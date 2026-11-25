@@ -16,12 +16,12 @@ export const useUserStore = create((set) => ({
       );
       useAuthStore.setState({ authUser: data.user });
       toast.success("Profile updated successfully.");
-      return true;
+      return data.user;
     } catch (error) {
       const message =
         error.response?.data?.message || "Unable to update your profile.";
       toast.error(message);
-      return false;
+      return null;
     } finally {
       set({ loading: false });
     }

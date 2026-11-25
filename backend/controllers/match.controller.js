@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import User from "../models/user.model.js";
+import { emitToUser } from "../socket/socket.js";
 
 const isValidId = (id) =>
   typeof id === "string" && mongoose.Types.ObjectId.isValid(id);
@@ -19,6 +20,25 @@ export const getMatches = async (req, res) => {
   } catch (error) {
     console.error("Loading matches failed:", error);
     return res.status(500).json({ message: "Unable to load matches." });
+  }
+};
+
+export const getLikesYou = async (req, res) => {
+  try {
+    const excludedIds = [
+      req.user._id,
+      ...req.user.likes,
+      ...req.user.dislikes,
+    ];
+    const likes = await User.find({
+      likes: req.user._id,
+      _id: { $nin: excludedIds },
+    }).select("name image age bio");
+
+    return res.status(200).json({ likes });
+  } catch (error) {
+    console.error("Loading incoming likes failed:", error);
+    return res.status(500).json({ message: "Unable to load incoming likes." });
   }
 };
 
@@ -55,6 +75,24 @@ export const swipeRight = async (req, res) => {
           $addToSet: { matches: req.user._id },
         }),
       ]);
+
+      const currentUserProfile = {
+        _id: req.user._id,
+        name: req.user.name,
+        image: req.user.image,
+        age: req.user.age,
+        bio: req.user.bio,
+      };
+      const targetUserProfile = {
+        _id: targetUser._id,
+        name: targetUser.name,
+        image: targetUser.image,
+        age: targetUser.age,
+        bio: targetUser.bio,
+      };
+
+      emitToUser(req.user._id, "newMatch", targetUserProfile);
+      emitToUser(targetUser._id, "newMatch", currentUserProfile);
     }
 
     return res.status(200).json({

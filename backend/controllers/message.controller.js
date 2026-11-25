@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
+import { emitToUser } from "../socket/socket.js";
 
 const isValidId = (id) =>
   typeof id === "string" && mongoose.Types.ObjectId.isValid(id);
@@ -73,6 +74,10 @@ export const sendMessage = async (req, res) => {
       receiver: result.targetUser._id,
       text,
     });
+
+    const messageData = message.toObject();
+    emitToUser(result.targetUser._id, "newMessage", messageData);
+    emitToUser(req.user._id, "newMessage", messageData);
 
     return res.status(201).json({ message });
   } catch (error) {

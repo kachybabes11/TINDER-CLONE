@@ -13,13 +13,18 @@ import matchRoutes from "./routes/match.route.js";
 import messageRoutes from "./routes/message.route.js";
 import userRoutes from "./routes/user.route.js";
 import { getJwtSecret } from "./lib/auth.js";
+import {initializeSocket} from "./socket/socket.js"
+import { createServer } from "node:http";
 
-const PORT = process.env.PORT || 5000;
 const app = express();
+const PORT = process.env.PORT || 5000;
+const httpServer = createServer(app)
+
+initializeSocket(httpServer)
 
 app.use(cookieParser());
 app.use(cors({
-  origin:"http://localhost:5173",
+  origin:process.env.FRONTEND_URL,
   credentials: true
 }))
 
@@ -49,7 +54,7 @@ export const startServer = async () => {
   getJwtSecret();
   await connectDB();
 
-  const server = app.listen(PORT);
+  const server = httpServer.listen(PORT);
   await new Promise((resolve, reject) => {
     const handleError = (error) => {
       server.off("listening", handleListening);
